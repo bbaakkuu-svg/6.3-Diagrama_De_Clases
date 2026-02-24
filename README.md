@@ -93,16 +93,30 @@ classDiagram
 
 ## 4. Fase 2: Ingeniería Directa (Código Java)
 
-En esta fase, el diseño UML se traduce a esqueletos de clases en Java, asegurando que las relaciones (herencia, composición, agregación, etc.) se implementen correctamente mediante el uso de tipos de datos, listas y modificadores de acceso.
+En esta fase, el diseño UML se traduce a esqueletos de clases en Java. A continuación se resume la estructura del sistema:
 
-### Traducción de Relaciones
-- **Herencia (`<|--`)**: Uso de la palabra clave `extends`.
-- **Composición (`*--`)**: La clase contenedora (`Vehiculo`) es responsable de instanciar los objetos contenidos (`Reparacion`).
-- **Agregación (`o--`)**: La clase contenedora (`Cliente`) mantiene una lista de objetos que pueden existir fuera de ella.
-- **Realización (`..|>`)**: Uso de la palabra clave `implements`.
-- **Dependencia/Asociación (`-->`)**: Atributos de clase o parámetros en métodos.
+### Resumen de Componentes
+| Clase / Interfaz | Tipo | Responsabilidad | Relación Principal |
+| :--- | :--- | :--- | :--- |
+| `Vehiculo` | Abstracta | Atributos comunes y gestión de reparaciones. | Padre de Coche/Moto. |
+| `Coche` | Clase | Especialización para vehículos de cuatro ruedas. | Herencia. |
+| `Moto` | Clase | Especialización para vehículos de dos ruedas. | Herencia. |
+| `Cliente` | Clase | Poseedor de los vehículos y facturas. | Agregación con Vehículo. |
+| `Reparacion`| Clase | Detalle de la intervención mecánica realizada. | Composición con Vehículo. |
+| `Especialista`| Interfaz | Define el contrato para realizar reparaciones. | - |
+| `Mecanico` | Clase | Personal capacitado para ejecutar reparaciones. | Implementa Especialista. |
+| `Taller` | Clase | Orquestador de la lógica de asignación. | Dependencia con Mecánico. |
 
-### Esqueletos de Clases
+### Traducción de Relaciones UML a Java
+| Concepto UML | Implementación Java | Descripción |
+| :--- | :--- | :--- |
+| **Herencia** | `extends` | `public class Coche extends Vehiculo { ... }` |
+| **Realización**| `implements`| `public class Mecanico implements Especialista { ... }` |
+| **Composición**| Instanciación Interna | La lista de `Reparacion` se gestiona dentro de `Vehiculo`. |
+| **Agregación** | Referencia Externa | `Cliente` contiene una lista de `Vehiculo` existentes. |
+| **Dependencia**| Parámetro/Atributo | `Taller` usa `Mecanico` para sus operaciones. |
+
+### Esqueletos de Clases (Estructura Documental)
 
 #### Interfaz Especialista
 ```java
@@ -111,7 +125,7 @@ public interface Especialista {
 }
 ```
 
-#### Clase Mecánico (Implementación)
+#### Clase Mecánico
 ```java
 public class Mecanico implements Especialista {
     private String nombre;
@@ -119,20 +133,20 @@ public class Mecanico implements Especialista {
 
     @Override
     public void reparar(Vehiculo v) {
-        // Lógica de reparación
+        // Estructura definida por la interfaz
     }
 }
 ```
 
-#### Clase Vehículo (Abstracta y Composición)
+#### Clase Vehículo
 ```java
 public abstract class Vehiculo {
     private String matricula;
     private String modelo;
-    private List<Reparacion> reparaciones; // Composición
+    private List<Reparacion> reparaciones; // Implementación de Composición
 
     public void addReparacion(String desc, double costo) {
-        // Composición: creación interna
+        // Gestión interna del ciclo de vida de Reparacion
     }
 }
 ```
@@ -253,5 +267,19 @@ classDiagram
 
 ---
 
-## 7. Conclusiones Finales
-La realización de este proyecto demuestra la importancia de una fase de diseño sólida antes de la codificación. El uso de **Mermaid** ha facilitado la iteración rápida sobre el modelo, permitiendo que la **Ingeniería Directa** sea un proceso casi automático y coherente. La posterior **Ingeniería Inversa** permitió adaptar el sistema a nuevas necesidades de negocio sin romper la arquitectura existente.
+## 7. Conclusiones y Reflexión Final
+
+La realización de este proyecto pone de manifiesto la importancia crítica de las metodologías de diseño en el ciclo de vida del desarrollo de software.
+
+### Beneficios de Modelar antes de Programar
+El modelado previo mediante UML permite abordar la complejidad del sistema antes de escribir una sola línea de código:
+- **Claridad Estructural**: Ayuda a visualizar las jerarquías de herencia y las dependencias, evitando errores arquitectónicos costosos de corregir en fases avanzadas.
+- **Detección Temprana de Problemas**: Al definir relaciones como la composición (`Vehiculo` - `Reparacion`), se establece claramente el ciclo de vida de los datos, lo que previene inconsistencias en la base de datos o en la gestión de memoria futura.
+- **Lenguaje Común**: El diagrama sirve como contrato entre desarrolladores, asegurando que todos comprendan la lógica de negocio de la misma manera.
+
+### Utilidad de la Ingeniería Directa e Inversa
+- **Ingeniería Directa**: Actúa como un puente acelerador. Al transformar el diseño UML en esqueletos de código Java, se garantiza que la implementación sea fiel a las especificaciones originales, reduciendo el "ruido" creativo que a veces introduce errores en la lógica.
+- **Ingeniería Inversa**: Es vital para la evolución del software. En sistemas reales, los requisitos cambian (como la adición de `Factura`). La ingeniería inversa permite que el diseño "vuelva a alcanzar" al código, asegurando que la documentación técnica sea un reflejo vivo del sistema y no un artefacto obsoleto.
+
+En resumen, la combinación de ambas técnicas garantiza un código **mantenible, escalable y correctamente documentado**, pilares fundamentales de cualquier desarrollo profesional.
+```
