@@ -196,28 +196,59 @@ El uso de una interfaz para definir a los mecánicos o entidades que reparan ofr
 
 ## 6. Fase 4: Ingeniería Inversa y Extensión
 
-En esta etapa, se ha identificado la necesidad de gestionar cobros. Se ha introducido la clase **Factura** y se ha re-mapeado el sistema.
+La **Ingeniería Inversa** es el proceso de analizar un sistema de software para identificar sus componentes y relaciones, permitiendo generar una representación de diseño a partir de código ya existente.
 
-### Nueva Clase: Factura
-Se añade para cerrar el ciclo de la reparación. Cada `Reparacion` genera una `Factura`.
+### Implementación Directa en Java
+En esta fase, se decidió extender las funcionalidades del taller para incluir la gestión de cobros. Para ello, se añadió la clase **Factura** directamente en el código fuente (`Factura.java`) sin pasar previamente por una fase de diseño visual.
 
-### UML Actualizado (Ingeniería Inversa)
+```java
+public class Factura {
+    private String numeroFactura;
+    private double baseImponible;
+    private double totalConIVA;
+    // ... métodos de cálculo
+}
+```
+
+### Generación Automática del Nuevo UML
+Tras la modificación del código, se procedió a realizar la "Ingeniería Inversa" para actualizar la documentación. Este nuevo diagrama UML refleja cómo la clase `Factura` se integra en el ecosistema:
+- Una **Reparación** ahora está asociada a una única **Factura** (Asociación 1:1).
+- El **Cliente** mantiene una relación con sus facturas para el seguimiento de pagos.
+
+### Diagrama UML Actualizado (Post-Extensión)
+
 ```mermaid
 classDiagram
-    direction TB
-    class Cliente
-    class Vehiculo
-    class Reparacion
+    direction LR
+    
+    class Cliente {
+        -String dni
+        -List~Vehiculo~ vehiculos
+        -List~Factura~ facturas
+    }
+
+    class Vehiculo {
+        <<abstract>>
+        -List~Reparacion~ reparaciones
+    }
+
+    class Reparacion {
+        -String descripcion
+        -double costo
+        -Factura facturaAsociada
+    }
+
     class Factura {
         -String numeroFactura
-        -double baseImponible
         -double totalConIVA
         +calcularTotal()
     }
-    
-    Vehiculo "1" *-- "0..*" Reparacion
-    Reparacion "1" --> "1" Factura : genera
-    Cliente "1" -- "0..*" Factura : paga
+
+    %% Nuevas Relaciones de Ingeniería Inversa
+    Vehiculo "1" *-- "0..*" Reparacion : Mantiene
+    Reparacion "1" --> "1" Factura : Genera
+    Cliente "1" --> "0..*" Factura : Paga
+    Cliente "1" o-- "1..*" Vehiculo : Posee
 ```
 
 ---
