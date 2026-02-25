@@ -1,5 +1,6 @@
 package com.taller;
 
+// Interfaz para los trabajadores que saben reparar vehículos
 public interface Especialista {
-    void reparar(Vehiculo v);
+    public void reparar(Vehiculo v);
 }

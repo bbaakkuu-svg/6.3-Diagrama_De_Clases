@@ -1,50 +1,53 @@
-# Sistema de Gestión de un Taller de Vehículos
+# Mi Proyecto: Taller de Vehículos (Tarea 6.3)
 
-Este proyecto documenta el diseño e implementación de un sistema de gestión para un taller mecánico, aplicando principios de **Ingeniería del Software**, diseño **UML** y conceptos de **Ingeniería Directa e Inversa**.
-
----
-
-## 1. Introducción
-El objetivo de este proyecto es modelar y desarrollar una solución robusta para la gestión operativa de un taller de vehículos. El sistema permite administrar la relación entre clientes y sus vehículos, el seguimiento de reparaciones mediante composición, y la asignación de tareas a especialistas (mecánicos).
-
-Se pone especial énfasis en:
-- El uso de **patrones de diseño orientados a objetos**.
-- La representación visual mediante **diagramas Mermaid**.
-- La transición fluida entre el diseño (UML) y el código (Java).
+Proyecto para la asignatura de Entorno de Desarrollo. Consiste en crear un sistema para gestionar un taller mecánico usando Java y diagramas UML.
 
 ---
 
-## 2. Enunciado del Problema
-Se requiere un sistema que gestione los siguientes elementos:
-- **Vehículos**: Se distinguen entre *Coches* y *Motos*, ambos con matrícula y modelo.
-- **Clientes**: Un cliente puede ser dueño de uno o varios vehículos.
-- **Reparaciones**: Cada vehículo tiene un historial de reparaciones. La relación es de **composición**, lo que implica que una reparación no tiene sentido sin un vehículo asociado.
-- **Especialista**: Interfaz que define el comportamiento necesario para realizar una reparación mediante el método `reparar()`.
-- **Mecánico**: Clase que implementa la interfaz `Especialista`.
-- **Taller**: Clase encargada de la lógica de negocio, que utiliza a un `Mecanico` para asignar y ejecutar reparaciones sobre los vehículos.
+## 1. ¿De qué va el proyecto?
+
+El objetivo es hacer un programa que nos ayude a llevar el control de un taller. Tenemos que guardar los datos de los clientes, sus coches y motos, y las reparaciones que se les hacen. También he incluido mecánicos que hacen el trabajo y facturas que se generan al terminar.
+
+He intentado aplicar lo que hemos visto en clase:
+
+- **Herencia**: Para no repetir código con los coches y las motos.
+- **Interfaces**: Para definir qué tiene que hacer un mecánico.
+- **Diagramas Mermaid**: Para que se vea bien el diseño antes de programar.
 
 ---
 
-## 3. Fase 1: Diseño (UML con Mermaid)
+## 2. Lo que pide el ejercicio
 
-A continuación se presenta el modelo inicial que captura los requisitos del sistema:
+El sistema tiene estas partes:
+
+- **Vehículos**: Hay coches (con puertas) y motos (con o sin sidecar).
+- **Clientes**: Personas que traen sus vehículos al taller.
+- **Reparaciones**: Lo que le hacemos al vehículo (qué se ha roto y cuánto cuesta).
+- **Mecánico**: La persona que arregla el coche. He usado una **interfaz** porque así es más fácil añadir otros tipos de trabajadores luego.
+- **Taller**: Es el sitio donde pasa todo y se organizan las reparaciones.
+
+---
+
+## 3. Mi Diseño UML
+
+He dibujado este esquema para aclarar cómo se conectan las clases entre sí:
 
 ```mermaid
 classDiagram
     direction TB
-    
+  
     class Cliente {
         -String dni
         -String nombre
-        -List~Vehiculo~ vehiculos
-        +addVehiculo(Vehiculo v)
+        -List vehiculos
+        +añadirVehiculo(Vehiculo v)
     }
 
     class Vehiculo {
         <<abstract>>
         -String matricula
         -String modelo
-        -List~Reparacion~ reparaciones
+        -List reparaciones
         +addReparacion(String desc, double costo)
     }
 
@@ -75,181 +78,59 @@ classDiagram
 
     class Taller {
         -String nombre
-        -Mecanico mecanicoAsignado
+        -Mecanico mecanico
         +gestionarReparacion(Vehiculo v, String desc, double costo)
     }
 
-    %% Relaciones
-    Cliente "1" o-- "1..*" Vehiculo : Agregación
-    Vehiculo <|-- Coche : Herencia
-    Vehiculo <|-- Moto : Herencia
-    Vehiculo "1" *-- "0..*" Reparacion : Composición
-    Mecanico ..|> Especialista : Realización
-    Taller --> Mecanico : Dependencia
-    Taller ..> Vehiculo : Usa
+    %% Relaciones explicadas fácil:
+    Cliente "1" o-- "1..*" Vehiculo : El cliente tiene coches
+    Vehiculo <|-- Coche : Un coche es un tipo de vehículo
+    Vehiculo <|-- Moto : Una moto es un tipo de vehículo
+    Vehiculo "1" *-- "0..*" Reparacion : Las reparaciones pertenecen al vehículo
+    Mecanico ..|> Especialista : El mecánico cumple la interfaz
+    Taller --> Mecanico : El taller tiene un mecánico
 ```
 
 ---
 
-## 4. Fase 2: Ingeniería Directa (Código Java)
+## 4. Cómo lo he pasado a Java
 
-En esta fase, el diseño UML se traduce a esqueletos de clases en Java. A continuación se resume la estructura del sistema:
+He creado las clases siguiendo el diagrama. Aquí explico un poco cómo lo he hecho:
 
-### Resumen de Componentes
-| Clase / Interfaz | Tipo | Responsabilidad | Relación Principal |
-| :--- | :--- | :--- | :--- |
-| `Vehiculo` | Abstracta | Atributos comunes y gestión de reparaciones. | Padre de Coche/Moto. |
-| `Coche` | Clase | Especialización para vehículos de cuatro ruedas. | Herencia. |
-| `Moto` | Clase | Especialización para vehículos de dos ruedas. | Herencia. |
-| `Cliente` | Clase | Poseedor de los vehículos y facturas. | Agregación con Vehículo. |
-| `Reparacion`| Clase | Detalle de la intervención mecánica realizada. | Composición con Vehículo. |
-| `Especialista`| Interfaz | Define el contrato para realizar reparaciones. | - |
-| `Mecanico` | Clase | Personal capacitado para ejecutar reparaciones. | Implementa Especialista. |
-| `Taller` | Clase | Orquestador de la lógica de asignación. | Dependencia con Mecánico. |
-
-### Traducción de Relaciones UML a Java
-| Concepto UML | Implementación Java | Descripción |
-| :--- | :--- | :--- |
-| **Herencia** | `extends` | `public class Coche extends Vehiculo { ... }` |
-| **Realización**| `implements`| `public class Mecanico implements Especialista { ... }` |
-| **Composición**| Instanciación Interna | La lista de `Reparacion` se gestiona dentro de `Vehiculo`. |
-| **Agregación** | Referencia Externa | `Cliente` contiene una lista de `Vehiculo` existentes. |
-| **Dependencia**| Parámetro/Atributo | `Taller` usa `Mecanico` para sus operaciones. |
-
-### Esqueletos de Clases (Estructura Documental)
-
-#### Interfaz Especialista
-```java
-public interface Especialista {
-    void reparar(Vehiculo v);
-}
-```
-
-#### Clase Mecánico
-```java
-public class Mecanico implements Especialista {
-    private String nombre;
-    private String especialidad;
-
-    @Override
-    public void reparar(Vehiculo v) {
-        // Estructura definida por la interfaz
-    }
-}
-```
-
-#### Clase Vehículo
-```java
-public abstract class Vehiculo {
-    private String matricula;
-    private String modelo;
-    private List<Reparacion> reparaciones; // Implementación de Composición
-
-    public void addReparacion(String desc, double costo) {
-        // Gestión interna del ciclo de vida de Reparacion
-    }
-}
-```
-
-#### Clases Coche y Moto (Herencia)
-```java
-public class Coche extends Vehiculo {
-    private int numPuertas;
-}
-
-public class Moto extends Vehiculo {
-    private boolean tieneSidecar;
-}
-```
-
-#### Clase Cliente (Agregación)
-```java
-public class Cliente {
-    private String dni;
-    private String nombre;
-    private List<Vehiculo> vehiculos; // Agregación (1..*)
-
-    public void addVehiculo(Vehiculo v) {
-        // El vehículo ya existe, se agrega a la lista
-    }
-}
-```
-
-#### Clase Taller (Dependencia)
-```java
-public class Taller {
-    private String nombre;
-    private Mecanico mecanicoAsignado; // Asociación
-
-    public void gestionarReparacion(Vehiculo v, String desc, double costo) {
-        // Dependencia de Vehiculo y Mecanico
-    }
-}
-```
+- **Herencia**: He usado `extends` para que `Coche` y `Moto` hereden de `Vehiculo`. Así no tengo que poner la matrícula y el modelo en todas las clases.
+- **Lista de reparaciones**: Cada vehículo tiene un `ArrayList` para ir guardando lo que le vamos arreglando.
+- **Interfaz Especialista**: He creado una interfaz muy sencilla con el método `reparar`. Luego la clase `Mecanico` usa `implements` para asegurar que sabe hacer su trabajo.
+- **Encapsulamiento**: He puesto los atributos como `private` y he creado los métodos para acceder a ellos.
 
 ---
 
-## 5. Fase 3: Interpretación y Decisiones de Diseño
+## 5. Notas sobre el diseño
 
-En esta etapa se justifica la arquitectura elegida, analizando las relaciones entre objetos y los beneficios de los patrones aplicados.
-
-### ¿Por qué Reparación es Composición respecto a Vehículo?
-En el modelo UML, se ha representado la relación entre `Vehiculo` y `Reparacion` mediante un rombo relleno (**Composición**):
-- **Dependencia de Existencia**: Una `Reparacion` no tiene sentido por sí misma fuera del contexto de un `Vehiculo`. Si un vehículo se elimina definitivamente del sistema del taller, su historial de reparaciones debe desaparecer con él.
-- **Gestión de Ciclo de Vida**: El `Vehiculo` es el responsable de crear y destruir sus propias instancias de `Reparacion`. En el código, esto se traduce en que la instanciación de `Reparacion` sucede dentro de los métodos de la clase `Vehiculo`, impidiendo que existan "reparaciones huérfanas".
-
-### Ventajas de usar la Interfaz Especialista
-El uso de una interfaz para definir a los mecánicos o entidades que reparan ofrece beneficios clave:
-
-1.  **Polimorfismo**: La clase `Taller` no necesita saber qué tipo específico de mecánico está trabajando. Puede tratar a cualquier objeto que implemente `Especialista` de forma genérica, invocando el método `.reparar()`.
-2.  **Flexibilidad**: Permite extender el sistema fácilmente. Si en el futuro el taller incorpora "Mecánicos Externos", "Robots de Reparación" o "Sistemas Automáticos", solo hará falta crear una nueva clase que implemente la interfaz sin modificar la lógica existente en `Taller`.
-3.  **Desacoplamiento (Low Coupling)**: El `Taller` depende de una abstracción (`Especialista`) y no de una implementación concreta (`Mecanico`). Esto facilita el mantenimiento y las pruebas unitarias (unit testing), ya que se pueden usar objetos simulados (*mocks*) que cumplan con la interfaz.
-4.  **Cohesión**: Cada clase se centra en su responsabilidad única, delegando la acción de reparar a la entidad especializada definida por la interfaz.
+- **Reparaciones y Vehículos**: He pensado que si borras un vehículo, no tiene mucho sentido guardar sus reparaciones, por eso están tan unidas.
+- **Uso de Interfaces**: Aunque parezca un poco lío al principio, usar `Especialista` viene muy bien por si en el futuro el taller contrata a un robot o a un autónomo.
 
 ---
 
-## 6. Fase 4: Ingeniería Inversa y Extensión
+## 6. Extras: Facturas e Ingeniería Inversa
 
-La **Ingeniería Inversa** es el proceso de analizar un sistema de software para identificar sus componentes y relaciones, permitiendo generar una representación de diseño a partir de código ya existente.
+Además de lo básico, he añadido una clase `Factura`. Lo hice directamente en el código porque me di cuenta de que faltaba.
 
-### Implementación Directa en Java
-En esta fase, se decidió extender las funcionalidades del taller para incluir la gestión de cobros. Para ello, se añadió la clase **Factura** directamente en el código fuente (`Factura.java`) sin pasar previamente por una fase de diseño visual.
+**Ingeniería Inversa**: Significa que una vez que tengo el código escrito, vuelvo atrás para actualizar mi dibujo (diagrama).
 
-```java
-public class Factura {
-    private String numeroFactura;
-    private double baseImponible;
-    private double totalConIVA;
-    // ... métodos de cálculo
-}
-```
-
-### Generación Automática del Nuevo UML
-Tras la modificación del código, se procedió a realizar la "Ingeniería Inversa" para actualizar la documentación. Este nuevo diagrama UML refleja cómo la clase `Factura` se integra en el ecosistema:
-- Una **Reparación** ahora está asociada a una única **Factura** (Asociación 1:1).
-- El **Cliente** mantiene una relación con sus facturas para el seguimiento de pagos.
-
-### Diagrama UML Actualizado (Post-Extensión)
+Así quedaría el diseño ahora con las facturas:
 
 ```mermaid
 classDiagram
     direction LR
-    
+  
     class Cliente {
-        -String dni
-        -List~Vehiculo~ vehiculos
-        -List~Factura~ facturas
-    }
-
-    class Vehiculo {
-        <<abstract>>
-        -List~Reparacion~ reparaciones
+        -String nombre
+        -List vehiculos
     }
 
     class Reparacion {
         -String descripcion
-        -double costo
-        -Factura facturaAsociada
+        -Factura factura
     }
 
     class Factura {
@@ -258,28 +139,18 @@ classDiagram
         +calcularTotal()
     }
 
-    %% Nuevas Relaciones de Ingeniería Inversa
-    Vehiculo "1" *-- "0..*" Reparacion : Mantiene
-    Reparacion "1" --> "1" Factura : Genera
-    Cliente "1" --> "0..*" Factura : Paga
-    Cliente "1" o-- "1..*" Vehiculo : Posee
+    Vehiculo "1" *-- "0..*" Reparacion : Tiene
+    Reparacion "1" --> "1" Factura : Crea factura
+    Cliente "1" o-- "1..*" Vehiculo : Es el dueño
 ```
 
 ---
 
-## 7. Conclusiones y Reflexión Final
+## 7. Conclusión
 
-La realización de este proyecto pone de manifiesto la importancia crítica de las metodologías de diseño en el ciclo de vida del desarrollo de software.
+Este ejercicio me ha servido para entender mejor cómo organizar las clases antes de empezar a picar código. Al principio cuesta un poco ver la diferencia entre agregación y composición, pero dibujándolo se entiende mucho mejor.
 
-### Beneficios de Modelar antes de Programar
-El modelado previo mediante UML permite abordar la complejidad del sistema antes de escribir una sola línea de código:
-- **Claridad Estructural**: Ayuda a visualizar las jerarquías de herencia y las dependencias, evitando errores arquitectónicos costosos de corregir en fases avanzadas.
-- **Detección Temprana de Problemas**: Al definir relaciones como la composición (`Vehiculo` - `Reparacion`), se establece claramente el ciclo de vida de los datos, lo que previene inconsistencias en la base de datos o en la gestión de memoria futura.
-- **Lenguaje Común**: El diagrama sirve como contrato entre desarrolladores, asegurando que todos comprendan la lógica de negocio de la misma manera.
 
-### Utilidad de la Ingeniería Directa e Inversa
-- **Ingeniería Directa**: Actúa como un puente acelerador. Al transformar el diseño UML en esqueletos de código Java, se garantiza que la implementación sea fiel a las especificaciones originales, reduciendo el "ruido" creativo que a veces introduce errores en la lógica.
-- **Ingeniería Inversa**: Es vital para la evolución del software. En sistemas reales, los requisitos cambian (como la adición de `Factura`). La ingeniería inversa permite que el diseño "vuelva a alcanzar" al código, asegurando que la documentación técnica sea un reflejo vivo del sistema y no un artefacto obsoleto.
+```
 
-En resumen, la combinación de ambas técnicas garantiza un código **mantenible, escalable y correctamente documentado**, pilares fundamentales de cualquier desarrollo profesional.
 ```

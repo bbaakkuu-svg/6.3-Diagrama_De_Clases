@@ -1,31 +1,31 @@
-# Documento de Diseño UML - Sistema de Gestión de Taller
+# Explicación de mis Diagramas UML - Taller de Vehículos
 
-Este documento centraliza y explica todas las estructuras UML que componen el Sistema de Gestión de un Taller de Vehículos, detallando la lógica de diseño aplicada en cada fase.
+En este documento explico cómo he organizado las clases de mi proyecto usando dibujos (UML). He dividido el trabajo en dos partes: el diseño inicial y los cambios que hice después.
 
 ---
 
-## 1. Modelo de Diseño Inicial (Clases y Relaciones)
+## 1. El Diseño Inicial (Fase 1)
 
-Este diagrama representa la estructura base del sistema, definiendo los componentes principales y cómo interactúan entre sí para cumplir con los requisitos iniciales.
+Este es el primer esquema que hice para entender cómo funciona el taller.
 
-### Diagrama UML (Fase 1)
+### Mi Diagrama UML
 
 ```mermaid
 classDiagram
     direction TB
-    
+  
     class Cliente {
         -String dni
         -String nombre
-        -List~Vehiculo~ vehiculos
-        +addVehiculo(Vehiculo v)
+        -List vehiculos
+        +añadirVehiculo(Vehiculo v)
     }
 
     class Vehiculo {
         <<abstract>>
         -String matricula
         -String modelo
-        -List~Reparacion~ reparaciones
+        -List reparaciones
         +addReparacion(String desc, double costo)
     }
 
@@ -56,55 +56,47 @@ classDiagram
 
     class Taller {
         -String nombre
-        -Mecanico mecanicoAsignado
+        -Mecanico mecanico
         +gestionarReparacion(Vehiculo v, String desc, double costo)
     }
 
-    %% Relaciones
-    Cliente "1" o-- "1..*" Vehiculo : Agregación
-    Vehiculo <|-- Coche : Herencia
-    Vehiculo <|-- Moto : Herencia
-    Vehiculo "1" *-- "0..*" Reparacion : Composición
-    Mecanico ..|> Especialista : Realización
-    Taller --> Mecanico : Dependencia
-    Taller ..> Vehiculo : Usa
+    %% Flechas explicadas
+    Cliente "1" o-- "1..*" Vehiculo : El cliente tiene sus coches
+    Vehiculo <|-- Coche : Herencia (un coche ES un vehiculo)
+    Vehiculo <|-- Moto : Herencia (una moto ES un vehiculo)
+    Vehiculo "1" *-- "0..*" Reparacion : Composición (las reparaciones son del coche)
+    Mecanico ..|> Especialista : El mecánico implementa la interfaz
+    Taller --> Mecanico : El taller usa al mecánico
 ```
 
-### Explicación de las Estructuras:
+### ¿Por qué lo he hecho así?
 
-- **Herencia (Vehiculo, Coche, Moto)**: `Vehiculo` es una clase abstracta que define atributos comunes. `Coche` y `Moto` heredan de ella, especializando el comportamiento y añadiendo atributos propios (puertas o sidecar).
-- **Composición (Vehiculo - Reparacion)**: La relación con el rombo relleno indica que la vida de una `Reparacion` está ligada a la del `Vehiculo`. No existen reparaciones sin vehículo asociado.
-- **Agregación (Cliente - Vehiculo)**: Un `Cliente` posee vehículos. Se usa agregación (rombo vacío) porque los vehículos pueden existir independientemente del cliente en ciertos contextos (aunque aquí se asocian).
-- **Interfaz (Especialista)**: Define un contrato de comportamiento (`reparar`). Esto permite el polimorfismo, donde `Mecanico` es una implementación concreta.
-- **Dependencia y Asociación (Taller, Mecánico, Vehículo)**: El `Taller` actúa como orquestador, utilizando a un `Mecanico` para operar sobre los `Vehiculos`.
+- **Herencia**: He puesto `Vehiculo` como clase abstracta porque no existen "vehículos" a secas, siempre son coches o motos. Así ahorro código.
+- **Composición (Rombo negro)**: He puesto un rombo negro entre `Vehiculo` y `Reparacion` porque las reparaciones no existen solas en el aire, siempre van pegadas a un coche o moto concreta.
+- **Agregación (Rombo blanco)**: Entre `Cliente` y `Vehiculo` hay un rombo blanco porque el coche puede existir aunque el cliente no esté en la base de datos (por ejemplo, si lo vendemos).
+- **Interfaz**: Uso `Especialista` para que el código sea más ordenado.
 
 ---
 
-## 2. Modelo de Diseño Extendido (Ingeniería Inversa)
+## 2. Cambios y Nuevas Clases (Ingeniería Inversa)
 
-Tras la implementación de nuevas funcionalidades (gestión de pagos), el diseño se actualizó para incluir la clase `Factura`. Este diagrama refleja el estado actual del sistema tras la evolución del código.
+Después de empezar a programar, me di cuenta de que hacían falta facturas para cobrar. Así que las añadí y actualicé el dibujo.
 
-### Diagrama UML (Fase 4 - Post-Extensión)
+### Diagrama Actualizado
 
 ```mermaid
 classDiagram
     direction LR
-    
+  
     class Cliente {
-        -String dni
-        -List~Vehiculo~ vehiculos
-        -List~Factura~ facturas
-    }
-
-    class Vehiculo {
-        <<abstract>>
-        -List~Reparacion~ reparaciones
+        -List vehiculos
+        -List facturas
     }
 
     class Reparacion {
         -String descripcion
         -double costo
-        -Factura facturaAsociada
+        -Factura factura
     }
 
     class Factura {
@@ -113,23 +105,20 @@ classDiagram
         +calcularTotal()
     }
 
-    %% Nuevas Relaciones de Ingeniería Inversa
-    Vehiculo "1" *-- "0..*" Reparacion : Mantiene
-    Reparacion "1" --> "1" Factura : Genera
-    Cliente "1" --> "0..*" Factura : Paga
-    Cliente "1" o-- "1..*" Vehiculo : Posee
+    %% Relaciones nuevas
+    Vehiculo "1" *-- "0..*" Reparacion : Historial
+    Reparacion "1" --> "1" Factura : Genera factura
+    Cliente "1" --> "0..*" Factura : Paga facturas
 ```
 
-### Explicación de las Adiciones:
+### ¿Qué he añadido?
 
-- **Clase Factura**: Se introduce para gestionar el aspecto económico de las reparaciones. Contiene el número de factura y el total calculado.
-- **Asociación Reparación - Factura**: Cada `Reparacion` genera exactamente una `Factura` (Relación 1:1).
-- **Relación Cliente - Factura**: El `Cliente` se asocia con sus facturas para mantener un registro de los pagos realizados (Relación 1:N).
-- **Flujo de Trabajo**: Este diseño permite trazar desde el cliente hasta la factura, pasando por el vehículo y la reparación correspondiente, asegurando la trazabilidad total del servicio.
+- **Clase Factura**: Para guardar el número de factura y el precio final con el IVA.
+- **Relación 1 a 1**: Cada reparación tiene su propia factura.
+- **Trazabilidad**: Ahora podemos saber qué factura pertenece a qué reparación y qué cliente la ha pagado.
 
 ---
 
-## 3. Justificación de Decisiones de Diseño
+## 3. Conclusiones
 
-- **Uso de Interfaces**: Se mantuvo `Especialista` para asegurar que el sistema sea escalable (por ejemplo, para añadir robots o subcontratas sin cambiar el código del taller).
-- **Persistencia de Datos**: La composición entre `Vehiculo` y `Reparacion` garantiza que la integridad referencial se mantenga a nivel de lógica de negocio: si borramos un vehículo, su historial se borra con él.
+Hacer el UML me ha servido para no perderme cuando el proyecto se hace más grande. Al principio parece que pierdes tiempo dibujando, pero luego se programa mucho más rápido porque ya sabes dónde va cada cosa.
